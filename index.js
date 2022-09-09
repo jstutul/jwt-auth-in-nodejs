@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import authRoute from "./Routes/AuthRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import multer from "multer";
 const app = express();
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -37,6 +38,26 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoute);
+app.use("/uploads", express.static("uploads"));
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + file.originalname);
+  },
+});
+
+var upload = multer({ storage: storage });
+
+app.post("/uploadfile", upload.single("img"), (req, res, next) => {
+  if (!req.file) {
+    const error = new Error("Please upload a file");
+    error.httpStatusCode = 400;
+    res.status(400).json({ message: "Image required" });
+  }
+  res.status(200).json({ message: "Image Upload Successfully" });
+});
 
 app.use((err, req, res, next) => {
   const errorStatus = err.status || 500;
